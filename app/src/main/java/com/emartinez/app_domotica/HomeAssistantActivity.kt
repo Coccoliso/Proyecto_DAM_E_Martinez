@@ -3,8 +3,10 @@ package com.emartinez.app_domotica
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.emartinez.app_domotica.api.ApiService
 import com.emartinez.app_domotica.api.EntityId
+import com.emartinez.app_domotica.recyclerview.HomeAssistantAdapter
 import com.emartinez.app_domotica.databinding.ActivityHomeAssistantBinding
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -12,10 +14,13 @@ import kotlinx.coroutines.launch
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
+
 class HomeAssistantActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityHomeAssistantBinding
     private lateinit var retrofit: Retrofit
+    private lateinit var adapter: HomeAssistantAdapter
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -24,6 +29,7 @@ class HomeAssistantActivity : AppCompatActivity() {
         retrofit = getRetrofit()
         checkState()
         initUi()
+        checkAllItemState()
 
     }
 
@@ -31,6 +37,14 @@ class HomeAssistantActivity : AppCompatActivity() {
         binding.swLight.setOnCheckedChangeListener { _, isChecked ->
             changeLightState(isChecked)
         }
+
+        adapter = HomeAssistantAdapter()
+        binding.rvItemList.setHasFixedSize(true)
+        binding.rvItemList.layoutManager = LinearLayoutManager(this)
+        binding.rvItemList.adapter = adapter
+
+
+
     }
 
     private fun checkState() {
@@ -42,6 +56,7 @@ class HomeAssistantActivity : AppCompatActivity() {
                 Log.i("HomeAssistant", "Conexión exitosa. Entidades: ${response.toString()}")
                 val state = response?.state
                 Log.i("HomeAssistant", "Estado: $state")
+
                 if (state == "on") {
                     runOnUiThread {
                         binding.swLight.isChecked = true
@@ -51,6 +66,23 @@ class HomeAssistantActivity : AppCompatActivity() {
                     runOnUiThread {
                         binding.swLight.isChecked = false
                         binding.ivLight.setImageResource(R.drawable.ic_light_off)
+                    }
+                }
+            } else {
+                Log.e("HomeAssistant", "Error en la conexión: ${myResponse.errorBody()}")
+            }
+        }
+    }
+
+    private fun checkAllItemState() {
+        CoroutineScope(Dispatchers.IO).launch {
+            val myResponse =
+                retrofit.create(ApiService::class.java).getStates()
+            if (myResponse.isSuccessful) {
+                val response = myResponse.body()
+                if (response != null) {
+                    runOnUiThread() {
+                        adapter.updateList(response)
                     }
                 }
             } else {
