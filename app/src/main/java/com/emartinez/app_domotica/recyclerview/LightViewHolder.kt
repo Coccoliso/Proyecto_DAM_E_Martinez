@@ -19,14 +19,19 @@ class LightViewHolder(view: View, private val activity: HomeAssistantActivity) :
 
 
     private val binding = ItemLightBinding.bind(view)
-    fun bind(light: ApiItem.Light) {
+    fun bind(light: ApiItem.Light, onItemSelected: (String)->Unit) {
         Log.d("LightViewHolder", "Enlazando luz: ${light.entityId}")
-        binding.tvLightId.text = light.entityId
+
+        val lightName = light.entityId.split(".").last()
+        binding.tvLightId.text = lightName
         checkLightState(light)
+
+        // Genera un ID único para el switch de esta luz
+        binding.swLight.id = View.generateViewId()
 
         binding.swLight.setOnCheckedChangeListener { _, isChecked ->
             CoroutineScope(Dispatchers.Main).launch {
-                val result = changeLightState(isChecked)
+                val result = changeLightState(light.entityId, isChecked)
                 if (result) {
                     binding.ivLight.setImageResource(R.drawable.ic_light_on)
                 } else {
@@ -58,15 +63,14 @@ class LightViewHolder(view: View, private val activity: HomeAssistantActivity) :
         }
     }
 
-    private fun changeLightState(state: Boolean): Boolean {
-        var result = false
-        CoroutineScope(Dispatchers.IO).async {
+    private suspend fun changeLightState(entityId: String, state: Boolean): Boolean {
+        return CoroutineScope(Dispatchers.IO).async {
             val myResponse = if (state) {
                 activity.retrofit.create(ApiService::class.java)
-                    .turnOnLight(EntityId("light.habitacion_superior")).execute()
+                    .turnOnLight(EntityId(entityId)).execute()
             } else {
                 activity.retrofit.create(ApiService::class.java)
-                    .turnOffLight(EntityId("light.habitacion_superior")).execute()
+                    .turnOffLight(EntityId(entityId)).execute()
             }
             withContext(Dispatchers.Main) {
                 if (myResponse.isSuccessful) {
@@ -75,14 +79,13 @@ class LightViewHolder(view: View, private val activity: HomeAssistantActivity) :
                     } else {
                         binding.ivLight.setImageResource(R.drawable.ic_light_off)
                     }
-                    result = true
+                    true
                 } else {
                     Log.e("HomeAssistant", "Error en la conexión: ${myResponse.errorBody()}")
-                    result = false
+                    false
                 }
             }
-        }.start()
-        return result
+        }.await()
     }
 
 

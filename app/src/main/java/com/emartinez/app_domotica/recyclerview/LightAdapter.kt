@@ -7,7 +7,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.emartinez.app_domotica.HomeAssistantActivity
 import com.emartinez.app_domotica.R
 
-class LightAdapter(private val activity: HomeAssistantActivity) :
+class LightAdapter(private val activity: HomeAssistantActivity, private val onItemSelected: (String)->Unit) :
     RecyclerView.Adapter<LightViewHolder>() {
 
     private var lightList: List<ApiItem.Light> = emptyList()
@@ -28,6 +28,11 @@ class LightAdapter(private val activity: HomeAssistantActivity) :
     }
 
     override fun onBindViewHolder(holder: LightViewHolder, position: Int) {
-        holder.bind(lightList[position])
+        holder.bind(lightList[position], onItemSelected)
+    }
+
+    fun clear() {
+        lightList = emptyList()
+        notifyDataSetChanged()
     }
 }

@@ -7,28 +7,37 @@ import androidx.recyclerview.widget.RecyclerView
 import com.emartinez.app_domotica.HomeAssistantActivity
 import com.emartinez.app_domotica.R
 
-class OpeningSensorAdapter (private val activity: HomeAssistantActivity) :
-        RecyclerView.Adapter<OpeningSensorViewHolder>() {
+class OpeningSensorAdapter(private val activity: HomeAssistantActivity, private val onItemSelected: (String)->Unit) :
+    RecyclerView.Adapter<OpclSensorViewHolder>() {
 
-        private var openingSensorList: List<ApiItem.OpeningSensor> = emptyList()
+    private var openingSensorList: List<ApiItem.OpeningSensor> = emptyList()
 
-        fun updateList(openingSensorList: List<ApiItem.OpeningSensor>) {
-            this.openingSensorList = openingSensorList
-            Log.d("OpeningSensorAdapter", "Lista de sensores de apertura actualizada con ${openingSensorList.size} elementos")
-            notifyDataSetChanged()
-        }
+    fun updateList(openingSensorList: List<ApiItem.OpeningSensor>) {
+        this.openingSensorList = openingSensorList.distinctBy { it.entityId }
+        Log.d(
+            "OpeningSensorAdapter",
+            "Lista de sensores de apertura actualizada con ${this.openingSensorList.size} elementos"
+        )
+        notifyDataSetChanged()
+    }
 
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): OpeningSensorViewHolder {
-            val view = LayoutInflater.from(parent.context).inflate(R.layout.item_opening_sensor, parent, false)
-            return OpeningSensorViewHolder(view, activity)
-        }
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): OpclSensorViewHolder {
+        val view =
+            LayoutInflater.from(parent.context).inflate(R.layout.item_opening_sensor, parent, false)
+        return OpclSensorViewHolder(view, activity)
+    }
 
-        override fun getItemCount(): Int {
-            return openingSensorList.size
-        }
+    override fun getItemCount(): Int {
+        return openingSensorList.size
+    }
 
-        override fun onBindViewHolder(holder: OpeningSensorViewHolder, position: Int) {
-            holder.bind(openingSensorList[position])
-        }
+    override fun onBindViewHolder(holder: OpclSensorViewHolder, position: Int) {
+        holder.bind(openingSensorList[position], onItemSelected)
+    }
+
+    fun clear() {
+        openingSensorList = emptyList()
+        notifyDataSetChanged()
+    }
 
 }
