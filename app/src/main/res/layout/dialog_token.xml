@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="300dp"
+    android:layout_height="wrap_content"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:background="@color/background_dialog"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:layout_marginVertical="16dp"
+        android:id="@+id/tvActualTokenUser"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/token_actual_del_usuario"
+        android:backgroundTint="@color/white"
+        android:textColor="@color/white"
+        android:textColorHint="@color/white" />
+
+    <TextView
+        android:id="@+id/tvTokenUser"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        tools:text="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiI2NjAxNGIyMGU1MGU0OGFmYTE1NTYyMjA5MmY1NzE2ZCIsImlhdCI6MTcxMzk1NzU1MCwiZXhwIjoyMDI5MzE3NTUwfQ.pFm-4QjUL7508u6Bfer9rrMNULuF8m7X4dN9yf9n6nY, Content-Type: application/json"
+        android:backgroundTint="@color/white"
+        android:textColor="@color/white"
+        android:textColorHint="@color/white" />
+
+    <androidx.appcompat.widget.AppCompatEditText
+        android:layout_marginVertical="16dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:backgroundTint="@color/white"
+        android:hint="@string/introduce_el_nuevo_token"
+        android:textColorHint="@color/title_text"
+        android:id="@+id/etTokenUser"
+        android:textColor="@color/white"/>
+
+
+    <Button
+        android:id="@+id/btnGuardarToken"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:backgroundTint="@color/background_button"
+        android:text="@string/guardar"
+        android:textAllCaps="true" />
+</LinearLayout>

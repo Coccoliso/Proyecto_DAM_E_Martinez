@@ -4,4 +4,25 @@
     <string name="ventana_abierta">ventana abierta</string>
     <string name="ventana_cerrada">ventana cerrada</string>
     <string name="volver">volver</string>
+    <string name="title_activity_login">LoginActivity</string>
+    <string name="prompt_email">Email</string>
+    <string name="prompt_password">Password</string>
+    <string name="action_sign_in">Sign in or register</string>
+    <string name="action_sign_in_short">Sign in</string>
+    <string name="welcome">"Welcome !"</string>
+    <string name="invalid_username">Not a valid username</string>
+    <string name="invalid_password">Password must be >5 characters</string>
+    <string name="login_failed">"Login failed"</string>
+    <string name="modo_oscuro">Modo oscuro</string>
+    <string name="description">Activa el modo oscuro para un cambio visual</string>
+    <string name="token_homeassistant">Token HomeAssistant</string>
+    <string name="token_description">Modifica el token de acceso a HomeAssistant</string>
+    <string name="logout_session">Cierra la sesión del usuario actual</string>
+    <string name="logout">Cerrar sesión</string>
+    <string name="user_token">Token de usuario</string>
+    <string name="guardar">guardar</string>
+    <string name="token_actual_del_usuario">Token actual del usuario</string>
+    <string name="introduce_el_nuevo_token">Introduce el nuevo token</string>
+    <string name="navigation_drawer_open">Abrir menú de navegación</string>
+    <string name="navigation_drawer_close">Cerrar menú de navegación</string>
 </resources>

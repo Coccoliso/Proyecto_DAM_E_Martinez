@@ -45,3 +45,7 @@ interface ApiService {
     fun changeLightBrightness(@Body body: ChangeBrightnessBody): Call<Void>
 
 }
+
+/*eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiI2NjAxNGI" +
+            "yMGU1MGU0OGFmYTE1NTYyMjA5MmY1NzE2ZCIsImlhdCI6MTcxMzk1NzU1MCwiZXhwIjoyMDI5MzE3NTUwfQ" +
+            ".pFm-4QjUL7508u6Bfer9rrMNULuF8m7X4dN9yf9n6nY", "Content-Type: application/json"*/
