@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorStatusBar">#2C3259</color>
+
+    <color name="toolbar">#0E0B20</color>
+    <color name="background_component_hover">#2C3259</color>
+    <color name="background_component">#1D1E33</color>
+    <color name="background_component_selected">#FF111328</color>
+    <color name="background_app">#0E0B20</color>
+    <color name="background_dialog">#1D1E33</color>
+    <color name="background_button">#42A5F5</color>
+    <color name="app_text">#C5CAE9</color>
+    <color name="title_text">#C5CAE9</color>
+    <color name="background_fab">#FF6200EE</color>
+    <color name="thumbTint">#9FA8DA</color>
+    <color name="progressTint">#3F51B5</color>
+    <color name="progressBackgroundTint">#303F9F</color>
+
+<!--    Settings-->
+
+    <color name="settigns_text_title">#FFFFFF</color>
+
+
+</resources>
