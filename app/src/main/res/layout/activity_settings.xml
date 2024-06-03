@@ -3,6 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/background_app"
     android:fitsSystemWindows="true">
 
     <com.google.android.material.appbar.AppBarLayout
@@ -14,7 +15,7 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="40dp"
-            android:background="?attr/colorPrimary"
+            android:background="@color/background_app"
             app:popupTheme="@style/AppTheme.PopupOverlay" />
 
     </com.google.android.material.appbar.AppBarLayout>
@@ -50,7 +51,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/modo_oscuro"
-                    android:textColor="@color/black" />
+                    android:textColor="@color/settigns_text_title" />
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -64,6 +65,7 @@
                 android:id="@+id/sw_dark_mode"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                app:thumbTint="@color/background_button"
                 android:layout_marginHorizontal="16dp" />
         </androidx.appcompat.widget.LinearLayoutCompat>
 
@@ -91,7 +93,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/token_homeassistant"
-                    android:textColor="@color/black" />
+                    android:textColor="@color/settigns_text_title" />
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -104,6 +106,7 @@
         </androidx.appcompat.widget.LinearLayoutCompat>
 
         <androidx.appcompat.widget.LinearLayoutCompat
+            android:id="@+id/llLogout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
@@ -126,7 +129,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/logout"
-                    android:textColor="@color/black" />
+                    android:textColor="@color/settigns_text_title" />
 
                 <TextView
                     android:layout_width="wrap_content"
