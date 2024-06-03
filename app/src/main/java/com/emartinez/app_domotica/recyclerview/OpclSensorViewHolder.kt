@@ -23,22 +23,18 @@ class OpclSensorViewHolder(view: View, private val activity: HomeAssistantActivi
     private val binding = ItemOpeningSensorBinding.bind(view)
     private var pollingJob: Job? = null
 
-    fun bind(
-        opclSensor: ApiItem.OpeningSensor,
-        onItemSelected: (String) -> Unit
-    ) {
+    fun bind(opclSensor: ApiItem.OpeningSensor) {
 
         startPollingJob(opclSensor)
         Log.d("OpclSensorViewHolder", "openSensor: $opclSensor")
         Log.d("OpeningSensorViewHolder", "Enlazando sensor de apertura: ${opclSensor.entityId}")
-        val sensorName = "Sensor " + opclSensor.entityId.split("_").last()
+        val sensorName = opclSensor.entityId.split(".").last().replace("_", " ")
+            .replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+
         binding.tvOpeningSensor.text = sensorName
 
-        binding.tvOpeningSensor.setOnClickListener {
-            onItemSelected(opclSensor.entityId)
-        }
         binding.cvOpeningSensor.setOnClickListener {
-           showDialog(opclSensor)
+            showDialog(opclSensor)
         }
 
     }
@@ -78,18 +74,15 @@ class OpclSensorViewHolder(view: View, private val activity: HomeAssistantActivi
         }
     }
 
-    fun unbind() {
-        pollingJob?.cancel()  // Cancela el pollingJob cuando el ViewHolder ya no está enlazado
-    }
-
     @SuppressLint("SetTextI18n")
     private fun showDialog(opclSensor: ApiItem.OpeningSensor) {
         val dialog = Dialog(activity)
         dialog.setContentView(R.layout.dialog_opcl_sensor)
 
         val sensorName = "Sensor " + opclSensor.entityId.split("_").last()
-        val sensorBatteryName = "sensor." + opclSensor.entityId.split(".").last() + "_battery"
-        val sensorTemperatureName = "sensor." + opclSensor.entityId.split(".").last() + "_temperature"
+        val sensorBatteryName = "sensor." + opclSensor.entityId.split(".").last() + "_bateria_2"
+        val sensorTemperatureName =
+            "sensor." + opclSensor.entityId.split(".").last() + "_temperatura_del_dispositivo_2"
 
         Log.i("OpeningSensorViewHolder", "Mostrando diálogo para el sensor de apertura $sensorName")
         Log.i("OpeningSensorViewHolder", "Sensor de batería: $sensorBatteryName")
@@ -101,10 +94,10 @@ class OpclSensorViewHolder(view: View, private val activity: HomeAssistantActivi
         val tvSensorTemperature: TextView = dialog.findViewById(R.id.tvSensorTemperature)
 
         checkItemState(sensorBatteryName) { batteryState ->
-            tvSensorBattery.text = "Batería: $batteryState"
+            tvSensorBattery.text = batteryState
         }
         checkItemState(sensorTemperatureName) { temperatureState ->
-            tvSensorTemperature.text = "Temperatura: $temperatureState"
+            tvSensorTemperature.text = temperatureState
         }
 
         tvSensorNameDialog.text = sensorName
@@ -117,8 +110,8 @@ class OpclSensorViewHolder(view: View, private val activity: HomeAssistantActivi
         dialog.show()
     }
 
-    private fun checkItemState(EntityId: String, callback: (String?) -> Unit) {
-        activity.retrofit.create(ApiService::class.java).getItemState(EntityId)
+    private fun checkItemState(entityId: String, callback: (String?) -> Unit) {
+        activity.retrofit.create(ApiService::class.java).getItemState(entityId)
             .enqueue(object :
                 Callback<ItemStateResponse> {
                 override fun onResponse(
@@ -140,5 +133,4 @@ class OpclSensorViewHolder(view: View, private val activity: HomeAssistantActivi
                 }
             })
     }
-
 }

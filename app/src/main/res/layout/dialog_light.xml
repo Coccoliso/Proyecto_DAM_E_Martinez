@@ -4,7 +4,7 @@
     android:layout_width="250dp"
     android:layout_height="wrap_content"
     xmlns:tools="http://schemas.android.com/tools"
-    android:background="@color/background_dialog"
+    android:background="@color/background_app"
     android:orientation="vertical"
     android:padding="16dp">
 
@@ -13,9 +13,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         tools:text="Nombre Luz"
-        android:backgroundTint="@color/white"
-        android:textColor="@color/white"
-        android:textColorHint="@color/white" />
+        android:textColor="@color/app_text"
+        android:textSize="16sp"
+        android:textStyle="bold" />
 
     <com.flask.colorpicker.ColorPickerView
         android:id="@+id/color_picker_view"
@@ -38,9 +38,9 @@
         android:backgroundTint="@color/white"
         android:min="0"
         android:max="255"
-        android:thumbTint="@color/purple_200"
-        android:progressTint="@color/purple_500"
-        android:progressBackgroundTint="@color/purple_700"/>
+        android:thumbTint="@color/thumbTint"
+        android:progressTint="@color/progressTint"
+        android:progressBackgroundTint="@color/progressBackgroundTint"/>
 
 
 

@@ -1,10 +1,12 @@
 package com.emartinez.app_domotica
 
+import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.View
-import android.widget.Toolbar
+import android.widget.Toast
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
@@ -16,25 +18,35 @@ import com.emartinez.app_domotica.api.ItemStateResponse
 import com.emartinez.app_domotica.databinding.ActivityHomeAssistantBinding
 import com.emartinez.app_domotica.recyclerview.ApiItem
 import com.emartinez.app_domotica.recyclerview.LightAdapter
-import com.emartinez.app_domotica.recyclerview.OpeningSensorAdapter
+import com.emartinez.app_domotica.recyclerview.OpclSensorAdapter
 import kotlinx.coroutines.launch
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import androidx.recyclerview.widget.ConcatAdapter
-import com.emartinez.app_domotica.DetailItemActivity.Companion.EXTRA_ITEM_ID
+import androidx.recyclerview.widget.GridLayoutManager
+import com.emartinez.app_domotica.api.Auth
+import com.emartinez.app_domotica.login.LoginActivity
+import com.emartinez.app_domotica.recyclerview.CameraAdapter
 import com.emartinez.app_domotica.settings.SettingsActivity
+import com.emartinez.app_domotica.ui.CameraActivity
+import com.emartinez.app_domotica.ui.LightActivity
+import com.emartinez.app_domotica.ui.OpclSensorActivity
 import com.google.android.material.navigation.NavigationView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import okhttp3.Interceptor
+import okhttp3.OkHttpClient
+import retrofit2.HttpException
 
 
-class HomeAssistantActivity : AppCompatActivity() {
+open class HomeAssistantActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityHomeAssistantBinding
     lateinit var retrofit: Retrofit
     private lateinit var lightAdapter: LightAdapter
-    private lateinit var openingSensorAdapter: OpeningSensorAdapter
+    private lateinit var openingSensorAdapter: OpclSensorAdapter
+    private lateinit var cameraAdapter: CameraAdapter
     private lateinit var drawerLayout: DrawerLayout
     private lateinit var navView: NavigationView
 
@@ -44,7 +56,7 @@ class HomeAssistantActivity : AppCompatActivity() {
         binding = ActivityHomeAssistantBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Inicializa drawerLayout y navView
+
         drawerLayout = binding.drawerLayout
         navView = binding.navView
 
@@ -75,7 +87,7 @@ class HomeAssistantActivity : AppCompatActivity() {
         }
 
         toggle.isDrawerIndicatorEnabled = true
-        toggle.setHomeAsUpIndicator(R.drawable.ic_menu) // Asegúrate de que este recurso exista y sea el correcto
+        toggle.setHomeAsUpIndicator(R.drawable.ic_menu)
         toggle.syncState()
 
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
@@ -83,11 +95,20 @@ class HomeAssistantActivity : AppCompatActivity() {
         navView.setNavigationItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.nav_lights -> {
-                    // Manejar selección de luces
+                    val intent = Intent(this, LightActivity::class.java)
+                    startActivity(intent)
                 }
+
                 R.id.nav_sensors -> {
-                    // Manejar selección de sensores
+                    val intent = Intent(this, OpclSensorActivity::class.java)
+                    startActivity(intent)
                 }
+
+                R.id.nav_cameras -> {
+                    val intent = Intent(this, CameraActivity::class.java)
+                    startActivity(intent)
+                }
+
                 R.id.nav_options -> {
                     val intent = Intent(this, SettingsActivity::class.java)
                     startActivity(intent)
@@ -99,26 +120,59 @@ class HomeAssistantActivity : AppCompatActivity() {
     }
 
     private fun initUi() {
-        lightAdapter = LightAdapter(this){navigateToDetailItemActivity(it)}
-        openingSensorAdapter = OpeningSensorAdapter(this){navigateToDetailItemActivity(it)}
-        val concatAdapter = ConcatAdapter(lightAdapter, openingSensorAdapter)
+        lightAdapter = LightAdapter(this)
+        openingSensorAdapter = OpclSensorAdapter(this)
+        cameraAdapter = CameraAdapter(this)
+        val concatAdapter = ConcatAdapter(lightAdapter, openingSensorAdapter, cameraAdapter)
 
         binding.rvItemList.setHasFixedSize(true)
         binding.rvItemList.layoutManager = LinearLayoutManager(this)
         binding.rvItemList.adapter = concatAdapter
+
+        loadToken()
     }
 
-    private fun classifyApiResponse(response: List<ItemStateResponse>): List<ApiItem> {
+    fun classifyApiResponse(response: List<ItemStateResponse>): List<ApiItem> {
         val apiItems = mutableListOf<ApiItem>()
 
         for (item in response) {
             val sensorName = item.entityId.split(".").last()
-            if (sensorName.isNotBlank()) {  // Verifica que el nombre no esté vacío
+            if (sensorName.isNotBlank()) {
                 when {
-                    item.entityId.startsWith("light") -> apiItems.add(ApiItem.Light(item.entityId, item.state))
-                    item.entityId.startsWith("binary_sensor") -> apiItems.add(ApiItem.OpeningSensor(item.entityId, item.state))
-                    item.entityId.endsWith("_battery") -> apiItems.add(ApiItem.BatterySensor(item.entityId, item.state.toFloatOrNull()))
-                    item.entityId.endsWith("_temperature") -> apiItems.add(ApiItem.TemperatureSensor(item.entityId, item.state.toFloatOrNull()))
+                    item.entityId.startsWith("light") -> apiItems.add(
+                        ApiItem.Light(
+                            item.entityId,
+                            item.state
+                        )
+                    )
+
+                    item.entityId.startsWith("binary_sensor") -> apiItems.add(
+                        ApiItem.OpeningSensor(
+                            item.entityId,
+                            item.state
+                        )
+                    )
+
+                    item.entityId.startsWith("camera") -> apiItems.add(
+                        ApiItem.Camera(
+                            item.entityId,
+                            item.state
+                        )
+                    )
+
+                    item.entityId.endsWith("_battery") -> apiItems.add(
+                        ApiItem.BatterySensor(
+                            item.entityId,
+                            item.state.toFloatOrNull()
+                        )
+                    )
+
+                    item.entityId.endsWith("_temperature") -> apiItems.add(
+                        ApiItem.TemperatureSensor(
+                            item.entityId,
+                            item.state.toFloatOrNull()
+                        )
+                    )
                 }
             }
         }
@@ -126,41 +180,121 @@ class HomeAssistantActivity : AppCompatActivity() {
         return apiItems
     }
 
+    @SuppressLint("SetTextI18n")
     private fun fetchApiData() {
         CoroutineScope(Dispatchers.IO).launch {
-            val response = retrofit.create(ApiService::class.java).getStates().execute()
-            withContext(Dispatchers.Main) {
-                if (response.isSuccessful) {
-                    Log.d("HomeAssistant", "Respuesta exitosa: ${response.body()}")
-                    val apiItems = classifyApiResponse(response.body()!!)
-                    val lights = apiItems.filterIsInstance<ApiItem.Light>()
-                    val openingSensors = apiItems.filterIsInstance<ApiItem.OpeningSensor>()
-                    val batterySensors = apiItems.filterIsInstance<ApiItem.BatterySensor>()
-                    val temperatureSensors = apiItems.filterIsInstance<ApiItem.TemperatureSensor>()
-                    Log.d("HomeAssistant", "Número de luces: ${lights.size}")
-                    Log.d("HomeAssistant", "Número de sensores de apertura: ${openingSensors.size}")
-                    lightAdapter.clear()  // Limpia los datos antiguos
-                    lightAdapter.updateList(lights)
-                    openingSensorAdapter.clear()  // Limpia los datos antiguos
-                    openingSensorAdapter.updateList(openingSensors)
+            try {
+                val response = retrofit.create(ApiService::class.java).getStates().execute()
+                withContext(Dispatchers.Main) {
+                    if (response.isSuccessful) {
+                        Log.d("HomeAssistant", "Respuesta exitosa: ${response.body()}")
+                        val apiItems = classifyApiResponse(response.body()!!)
+                        val lights = apiItems.filterIsInstance<ApiItem.Light>()
+                        val openingSensors = apiItems.filterIsInstance<ApiItem.OpeningSensor>()
+                        val cameras = apiItems.filterIsInstance<ApiItem.Camera>()
+                        Log.d("HomeAssistant", "Número de luces: ${lights.size}")
+                        Log.d(
+                            "HomeAssistant",
+                            "Número de sensores de apertura: ${openingSensors.size}"
+                        )
+                        Log.d("HomeAssistant", "Número de cámaras: ${cameras.size}")
+                        lightAdapter.clear()
+                        lightAdapter.updateList(lights)
+                        openingSensorAdapter.clear()
+                        openingSensorAdapter.updateList(openingSensors)
+                        cameraAdapter.clear()
+                        cameraAdapter.updateList(cameras)
+                    } else {
+                        Log.e("HomeAssistant", "Error en la conexión: ${response.errorBody()}")
+                    }
+                }
+                val weatherResponse =
+                    retrofit.create(ApiService::class.java).getWeatherState("weather.forecast_casa")
+                withContext(Dispatchers.Main) {
+                    Log.d("HomeAssistant", "Estado del tiempo: ${weatherResponse.state}")
+                    Log.d("HomeAssistant", "Temperatura: ${weatherResponse.attributes.temperature}")
+                    Log.d(
+                        "HomeAssistant",
+                        "Presión del aire: ${weatherResponse.attributes.pressure}"
+                    )
+                    Log.d("HomeAssistant", "Humedad: ${weatherResponse.attributes.humidity}")
+                    Log.d(
+                        "HomeAssistant",
+                        "Velocidad del viento: ${weatherResponse.attributes.windSpeed}"
+                    )
+
+                    val translatedState = translateWeatherState(weatherResponse.state)
+                    binding.tvWeather.text = translatedState
+                    binding.tvTemperature.text = "${weatherResponse.attributes.temperature}°C"
+                    binding.tvPressure.text = "${weatherResponse.attributes.pressure} hPa"
+                    binding.tvHumidity.text = "${weatherResponse.attributes.humidity}%"
+                    binding.tvWindSpeed.text = "${weatherResponse.attributes.windSpeed} km/h"
+                }
+            }catch (e: HttpException) {
+                if (e.code() == 401) {
+                    Log.e("HomeAssistant", "Error de token de autenticación: ${e.message()}")
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(
+                            this@HomeAssistantActivity,
+                            "Introduce un token de autenticación válido",
+                            Toast.LENGTH_LONG
+                        ).show()
+                        val intent =
+                            Intent(this@HomeAssistantActivity, SettingsActivity::class.java)
+                        startActivity(intent)
+                        finish()
+                    }
                 } else {
-                    Log.e("HomeAssistant", "Error en la conexión: ${response.errorBody()}")
+                    Log.e("HomeAssistant", "Error en la conexión: ${e.message()}")
                 }
             }
         }
     }
 
-    private fun navigateToDetailItemActivity(id: String) {
-        val intent = Intent(this, DetailItemActivity::class.java)
-        intent.putExtra(EXTRA_ITEM_ID, id)
-        startActivity(intent)
-    }
-
     private fun createRetrofit(): Retrofit {
+        val authInterceptor = Interceptor { chain ->
+            val originalRequest = chain.request()
+            val newRequest = originalRequest.newBuilder()
+                .header("Authorization", "Bearer ${Auth.token}")
+                .build()
+            chain.proceed(newRequest)
+        }
+
+        val client = OkHttpClient.Builder()
+            .addInterceptor(authInterceptor)
+            .build()
+
         return Retrofit
             .Builder()
-            .baseUrl("http://homeassistant.local:8123/")
+            .baseUrl("https://uqhxult1i7sr8yupf6tljeton2wctfsq.ui.nabu.casa/")
+            .client(client)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
     }
+
+    private fun translateWeatherState(state: String): String {
+        return when (state) {
+            "clear-night" -> "Despejado"
+            "cloudy" -> "Nublado"
+            "fog" -> "Niebla"
+            "hail" -> "Granizo"
+            "lightning" -> "Relámpagos"
+            "lightning-rainy" -> "Lluvia con relámpagos"
+            "partlycloudy" -> "Parcialmente nublado"
+            "pouring" -> "Lluvia torrencial"
+            "rainy" -> "Lluvioso"
+            "snowy" -> "Nevado"
+            "snowy-rainy" -> "Nieve con lluvia"
+            "sunny" -> "Soleado"
+            "windy" -> "Ventoso"
+            "windy-variant" -> "Ventoso variante"
+            "exceptional" -> "Excepcional"
+            else -> "Estado desconocido"
+        }
+    }
+    private fun loadToken() {
+        val sharedPref = getSharedPreferences(SettingsActivity.PREFS_NAME, Context.MODE_PRIVATE)
+        Auth.token = sharedPref.getString(SettingsActivity.KEY_TOKEN, "") ?: ""
+    }
+
 }

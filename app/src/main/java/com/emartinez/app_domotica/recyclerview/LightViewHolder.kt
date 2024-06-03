@@ -21,13 +21,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import com.emartinez.app_domotica.recyclerview.ApiItem
 import com.flask.colorpicker.ColorPickerView
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
 
 
 class LightViewHolder(view: View, private val activity: HomeAssistantActivity) :
@@ -35,15 +29,13 @@ class LightViewHolder(view: View, private val activity: HomeAssistantActivity) :
 
     private val binding = ItemLightBinding.bind(view)
 
-    fun bind(light: ApiItem.Light, onItemSelected: (String) -> Unit) {
+    fun bind(light: ApiItem.Light) {
         Log.d("LightViewHolder", "Enlazando luz: ${light.entityId}")
 
         val lightName = light.entityId.split(".").last().replace("_", " ")
             .replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
         binding.tvLightId.text = lightName
         checkLightState(light)
-        // Genera un ID único para el switch de esta luz
-        binding.swLight.id = View.generateViewId()
 
         binding.cvLight.setOnClickListener {
             showDialog(light)
@@ -51,36 +43,15 @@ class LightViewHolder(view: View, private val activity: HomeAssistantActivity) :
 
         binding.swLight.setOnCheckedChangeListener { _, isChecked ->
             CoroutineScope(Dispatchers.Main).launch {
-                val result = changeLightState(light.entityId, isChecked)
-                if (result) {
-                    binding.ivLight.setImageResource(R.drawable.ic_light_on)
-                } else {
-                    binding.ivLight.setImageResource(R.drawable.ic_light_off)
-                }
+               changeLightState(light.entityId, isChecked)
             }
         }
-        /**
-        val changeColorBody = ChangeColorBody(light.entityId, listOf(255, 0, 0))
-
-        apiService.changeLightColor(changeColorBody).enqueue(object : Callback<Void> {
-        override fun onResponse(call: Call<Void>, response: Response<Void>) {
-        if (response.isSuccessful) {
-        Log.d("ApiService", "Color cambiado con éxito")
-        } else {
-        Log.e("ApiService", "Error al cambiar el color: ${response.errorBody()?.string()}")
-        }
-        }
-
-        override fun onFailure(call: Call<Void>, t: Throwable) {
-        Log.e("ApiService", "Error al cambiar el color", t)
-        }
-        })*/
     }
 
     private fun checkLightState(item: ApiItem.Light) {
         CoroutineScope(Dispatchers.IO).launch {
             val myResponse =
-                activity.retrofit.create(ApiService::class.java).getItemState(item.entityId)
+                activity.retrofit.create(ApiService::class.java).getLightState(item.entityId)
                     .execute()
             withContext(Dispatchers.Main) {
                 if (myResponse.isSuccessful) {
@@ -100,26 +71,19 @@ class LightViewHolder(view: View, private val activity: HomeAssistantActivity) :
         }
     }
 
-    private suspend fun changeLightState(entityId: String, state: Boolean): Boolean {
+    private suspend fun changeLightState(entityId: String, state: Boolean) {
         return CoroutineScope(Dispatchers.IO).async {
-            val myResponse = if (state) {
+            if (state) {
                 activity.retrofit.create(ApiService::class.java)
                     .turnOnLight(EntityId(entityId)).execute()
+                withContext(Dispatchers.Main) {
+                    binding.ivLight.setImageResource(R.drawable.ic_light_on)
+                }
             } else {
                 activity.retrofit.create(ApiService::class.java)
                     .turnOffLight(EntityId(entityId)).execute()
-            }
-            withContext(Dispatchers.Main) {
-                if (myResponse.isSuccessful) {
-                    if (state) {
-                        binding.ivLight.setImageResource(R.drawable.ic_light_on)
-                    } else {
-                        binding.ivLight.setImageResource(R.drawable.ic_light_off)
-                    }
-                    true
-                } else {
-                    Log.e("HomeAssistant", "Error en la conexión: ${myResponse.errorBody()}")
-                    false
+                withContext(Dispatchers.Main) {
+                    binding.ivLight.setImageResource(R.drawable.ic_light_off)
                 }
             }
         }.await()
@@ -147,14 +111,12 @@ class LightViewHolder(view: View, private val activity: HomeAssistantActivity) :
                 if (fromUser) {
                     CoroutineScope(Dispatchers.IO).launch {
                         val changeBrightnessBody = ChangeBrightnessBody(light.entityId, progress)
-                        val myResponse = activity.retrofit.create(ApiService::class.java)
+                        activity.retrofit.create(ApiService::class.java)
                             .changeLightBrightness(changeBrightnessBody).execute()
                     }
                 }
             }
-
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-
             override fun onStopTrackingTouch(seekBar: SeekBar?) {}
         })
 
@@ -178,15 +140,13 @@ class LightViewHolder(view: View, private val activity: HomeAssistantActivity) :
                 }
             }
         }
-
-
         dialog.show()
     }
 
     private fun updateDialogValues(dialog: Dialog, light: ApiItem.Light) {
         CoroutineScope(Dispatchers.IO).launch {
             val myResponse =
-                activity.retrofit.create(ApiService::class.java).getItemState(light.entityId)
+                activity.retrofit.create(ApiService::class.java).getLightState(light.entityId)
                     .execute()
             withContext(Dispatchers.Main) {
                 if (myResponse.isSuccessful) {

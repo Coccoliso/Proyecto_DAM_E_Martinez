@@ -1,5 +1,6 @@
 package com.emartinez.app_domotica.recyclerview
 
+import android.annotation.SuppressLint
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -7,11 +8,12 @@ import androidx.recyclerview.widget.RecyclerView
 import com.emartinez.app_domotica.HomeAssistantActivity
 import com.emartinez.app_domotica.R
 
-class OpeningSensorAdapter(private val activity: HomeAssistantActivity, private val onItemSelected: (String)->Unit) :
+class OpclSensorAdapter(private val activity: HomeAssistantActivity) :
     RecyclerView.Adapter<OpclSensorViewHolder>() {
 
     private var openingSensorList: List<ApiItem.OpeningSensor> = emptyList()
 
+    @SuppressLint("NotifyDataSetChanged")
     fun updateList(openingSensorList: List<ApiItem.OpeningSensor>) {
         this.openingSensorList = openingSensorList.distinctBy { it.entityId }
         Log.d(
@@ -32,9 +34,10 @@ class OpeningSensorAdapter(private val activity: HomeAssistantActivity, private 
     }
 
     override fun onBindViewHolder(holder: OpclSensorViewHolder, position: Int) {
-        holder.bind(openingSensorList[position], onItemSelected)
+        holder.bind(openingSensorList[position])
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     fun clear() {
         openingSensorList = emptyList()
         notifyDataSetChanged()

@@ -1,5 +1,6 @@
 package com.emartinez.app_domotica.recyclerview
 
+import android.annotation.SuppressLint
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -7,11 +8,12 @@ import androidx.recyclerview.widget.RecyclerView
 import com.emartinez.app_domotica.HomeAssistantActivity
 import com.emartinez.app_domotica.R
 
-class LightAdapter(private val activity: HomeAssistantActivity, private val onItemSelected: (String)->Unit) :
+class LightAdapter(private val activity: HomeAssistantActivity) :
     RecyclerView.Adapter<LightViewHolder>() {
 
     private var lightList: List<ApiItem.Light> = emptyList()
 
+    @SuppressLint("NotifyDataSetChanged")
     fun updateList(lightList: List<ApiItem.Light>) {
         this.lightList = lightList
         Log.d("LightAdapter", "Lista de luces actualizada con ${lightList.size} elementos")
@@ -28,9 +30,10 @@ class LightAdapter(private val activity: HomeAssistantActivity, private val onIt
     }
 
     override fun onBindViewHolder(holder: LightViewHolder, position: Int) {
-        holder.bind(lightList[position], onItemSelected)
+        holder.bind(lightList[position])
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     fun clear() {
         lightList = emptyList()
         notifyDataSetChanged()
