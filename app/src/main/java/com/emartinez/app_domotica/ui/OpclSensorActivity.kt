@@ -17,10 +17,20 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+/**
+ * `OpclSensorActivity` es una actividad que proporciona la interfaz de usuario para la gestión de sensores de apertura en la aplicación.
+ *
+ * @property binding El objeto de enlace que da acceso a las vistas en el diseño.
+ * @property opclSensorAdapter El adaptador para la lista de sensores de apertura.
+ */
 class OpclSensorActivity : HomeAssistantActivity() {
 
     private lateinit var binding: ActivityOpclSensorBinding
     private lateinit var opclSensorAdapter: OpclSensorAdapter
+
+    /**
+     * Método que se llama al crear la actividad. Inicializa la interfaz de usuario y recupera los datos de la API.
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -40,17 +50,24 @@ class OpclSensorActivity : HomeAssistantActivity() {
         fetchApiData()
     }
 
+    /**
+     * Método que se llama cuando se selecciona un elemento del menú de opciones.
+     */
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             android.R.id.home -> {
                 finish()
                 true
             }
+
             else -> super.onOptionsItemSelected(item)
         }
     }
 
-    private fun initUi(){
+    /**
+     * Método para inicializar la interfaz de usuario. Establece el adaptador para la lista de sensores de apertura.
+     */
+    private fun initUi() {
         opclSensorAdapter = OpclSensorAdapter(this)
         binding.rvOpclSensorItemList.adapter = opclSensorAdapter
 
@@ -58,6 +75,9 @@ class OpclSensorActivity : HomeAssistantActivity() {
         binding.rvOpclSensorItemList.layoutManager = LinearLayoutManager(this)
     }
 
+    /**
+     * Método para recuperar los datos de la API. Clasifica la respuesta de la API y actualiza la lista de sensores de apertura.
+     */
     private fun fetchApiData() {
         CoroutineScope(Dispatchers.IO).launch {
             val response = retrofit.create(ApiService::class.java).getStates().execute()

@@ -6,6 +6,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.webkit.URLUtil
 import android.widget.Toast
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
@@ -23,10 +24,10 @@ import kotlinx.coroutines.launch
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import androidx.recyclerview.widget.ConcatAdapter
-import com.emartinez.app_domotica.controller.Auth
+import com.emartinez.app_domotica.controller.InitPrefs
 import com.emartinez.app_domotica.ui.settings.SettingsActivity
 import com.emartinez.app_domotica.ui.CameraActivity
-import com.emartinez.app_domotica.ui.CameraAdapter
+import com.emartinez.app_domotica.ui.recyclerview.CameraAdapter
 import com.emartinez.app_domotica.ui.LightActivity
 import com.emartinez.app_domotica.ui.OpclSensorActivity
 import com.google.android.material.navigation.NavigationView
@@ -36,8 +37,20 @@ import kotlinx.coroutines.withContext
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import retrofit2.HttpException
+import java.util.concurrent.TimeUnit
 
-
+/**
+ * `HomeAssistantActivity` es una actividad que proporciona la interfaz de usuario principal de la aplicación.
+ * Muestra una lista de luces, sensores de apertura y cámaras, y permite al usuario interactuar con ellos.
+ *
+ * @property binding El objeto de enlace que da acceso a las vistas en el diseño.
+ * @property retrofit La instancia de Retrofit utilizada para las llamadas a la API.
+ * @property lightAdapter El adaptador para la lista de luces.
+ * @property openingSensorAdapter El adaptador para la lista de sensores de apertura.
+ * @property cameraAdapter El adaptador para la lista de cámaras.
+ * @property drawerLayout El layout del cajón de navegación.
+ * @property navView La vista de navegación.
+ */
 open class HomeAssistantActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityHomeAssistantBinding
@@ -48,7 +61,10 @@ open class HomeAssistantActivity : AppCompatActivity() {
     private lateinit var drawerLayout: DrawerLayout
     private lateinit var navView: NavigationView
 
-
+    /**
+     * Método que se llama al crear la actividad. Inicializa la interfaz de usuario, carga las preferencias,
+     * recupera los datos de la API y configura la barra de herramientas y el cajón de navegación.
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityHomeAssistantBinding.inflate(layoutInflater)
@@ -59,6 +75,7 @@ open class HomeAssistantActivity : AppCompatActivity() {
         navView = binding.navView
 
         retrofit = createRetrofit()
+        loadPreferences()
         initUi()
         lifecycleScope.launch {
             fetchApiData()
@@ -117,6 +134,10 @@ open class HomeAssistantActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Método para inicializar la interfaz de usuario. Configura los adaptadores para las listas de luces,
+     * sensores de apertura y cámaras, y establece el adaptador para la lista de elementos.
+     */
     private fun initUi() {
         lightAdapter = LightAdapter(this)
         openingSensorAdapter = OpclSensorAdapter(this)
@@ -127,9 +148,14 @@ open class HomeAssistantActivity : AppCompatActivity() {
         binding.rvItemList.layoutManager = LinearLayoutManager(this)
         binding.rvItemList.adapter = concatAdapter
 
-        loadToken()
     }
 
+    /**
+     * Método para clasificar la respuesta de la API en diferentes tipos de elementos (luces, sensores de apertura, cámaras, etc.).
+     *
+     * @param response La respuesta de la API.
+     * @return Una lista de elementos de la API.
+     */
     fun classifyApiResponse(response: List<ItemStateResponse>): List<ApiItem> {
         val apiItems = mutableListOf<ApiItem>()
 
@@ -178,6 +204,10 @@ open class HomeAssistantActivity : AppCompatActivity() {
         return apiItems
     }
 
+    /**
+     * Método para recuperar los datos de la API. Clasifica la respuesta de la API y actualiza las listas de luces,
+     * sensores de apertura y cámaras. También recupera y muestra la información del tiempo.
+     */
     @SuppressLint("SetTextI18n")
     private fun fetchApiData() {
         CoroutineScope(Dispatchers.IO).launch {
@@ -228,7 +258,7 @@ open class HomeAssistantActivity : AppCompatActivity() {
                     binding.tvHumidity.text = "${weatherResponse.attributes.humidity}%"
                     binding.tvWindSpeed.text = "${weatherResponse.attributes.windSpeed} km/h"
                 }
-            }catch (e: HttpException) {
+            } catch (e: HttpException) {
                 if (e.code() == 401) {
                     Log.e("HomeAssistant", "Error de token de autenticación: ${e.message()}")
                     withContext(Dispatchers.Main) {
@@ -249,27 +279,47 @@ open class HomeAssistantActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Método para crear la instancia de Retrofit utilizada para las llamadas a la API.
+     *
+     * @return La instancia de Retrofit.
+     */
     private fun createRetrofit(): Retrofit {
         val authInterceptor = Interceptor { chain ->
             val originalRequest = chain.request()
             val newRequest = originalRequest.newBuilder()
-                .header("Authorization", "Bearer ${Auth.token}")
+                .header("Authorization", "Bearer ${InitPrefs.token}")
                 .build()
             chain.proceed(newRequest)
         }
 
+        val url = InitPrefs.url
+
         val client = OkHttpClient.Builder()
             .addInterceptor(authInterceptor)
+            .connectTimeout(1, TimeUnit.MINUTES)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .writeTimeout(15, TimeUnit.SECONDS)
             .build()
 
-        return Retrofit
-            .Builder()
-            .baseUrl("https://uqhxult1i7sr8yupf6tljeton2wctfsq.ui.nabu.casa/")
-            .client(client)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
+        if (!URLUtil.isHttpUrl(url) && !URLUtil.isHttpsUrl(url)) {
+            throw IllegalArgumentException("Invalid URL: $url")
+        } else {
+            return Retrofit
+                .Builder()
+                .baseUrl(url)
+                .client(client)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build()
+        }
     }
 
+    /**
+     * Método para traducir el estado del tiempo de inglés a español.
+     *
+     * @param state El estado del tiempo en inglés.
+     * @return El estado del tiempo en español.
+     */
     private fun translateWeatherState(state: String): String {
         return when (state) {
             "clear-night" -> "Despejado"
@@ -290,9 +340,15 @@ open class HomeAssistantActivity : AppCompatActivity() {
             else -> "Estado desconocido"
         }
     }
-    private fun loadToken() {
+
+    /**
+     * Método para cargar las preferencias compartidas.
+     */
+    private fun loadPreferences() {
         val sharedPref = getSharedPreferences(SettingsActivity.PREFS_NAME, Context.MODE_PRIVATE)
-        Auth.token = sharedPref.getString(SettingsActivity.KEY_TOKEN, "") ?: ""
+        InitPrefs.token = sharedPref.getString(SettingsActivity.KEY_TOKEN, "") ?: ""
+        InitPrefs.url = sharedPref.getString(SettingsActivity.KEY_URL, "") ?: ""
+        InitPrefs.darkMode = sharedPref.getBoolean(SettingsActivity.KEY_DARK_MODE, false)
     }
 
 }

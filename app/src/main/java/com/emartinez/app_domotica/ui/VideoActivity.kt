@@ -14,6 +14,14 @@ import android.view.ViewTreeObserver
 import android.view.WindowInsets
 import android.view.WindowInsetsController
 
+/**
+ * `VideoActivity` es una actividad que proporciona la interfaz de usuario para la reproducción de videos en la aplicación.
+ *
+ * @property binding El objeto de enlace que da acceso a las vistas en el diseño.
+ * @property libVLC La instancia de LibVLC utilizada para la reproducción de videos.
+ * @property mediaPlayer El reproductor de medios utilizado para reproducir el video.
+ * @property videoLayout El diseño del video que se muestra en la pantalla.
+ */
 class VideoActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityVideoBinding
@@ -21,6 +29,10 @@ class VideoActivity : AppCompatActivity() {
     private lateinit var mediaPlayer: MediaPlayer
     private lateinit var videoLayout: VLCVideoLayout
 
+    /**
+     * Método que se llama al crear la actividad. Inicializa la interfaz de usuario, oculta las barras de estado y navegación,
+     * configura el reproductor de medios y comienza a reproducir el video.
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityVideoBinding.inflate(layoutInflater)
@@ -34,14 +46,10 @@ class VideoActivity : AppCompatActivity() {
         } else {
             @Suppress("DEPRECATION")
             window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_IMMERSIVE
-                    // Ocultar la barra de navegación
                     or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                    // Ocultar la barra de estado
                     or View.SYSTEM_UI_FLAG_FULLSCREEN
-                    // Mantener el contenido de la aplicación por debajo de las barras
                     or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
                     or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                    // Mantener la barra de navegación oculta cuando se interactúa
                     or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
         }
         val options = ArrayList<String>()
@@ -49,7 +57,8 @@ class VideoActivity : AppCompatActivity() {
         mediaPlayer = MediaPlayer(libVLC)
         videoLayout = binding.vlcVideoLayout
 
-        videoLayout.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
+        videoLayout.viewTreeObserver.addOnGlobalLayoutListener(object :
+            ViewTreeObserver.OnGlobalLayoutListener {
             override fun onGlobalLayout() {
                 if (videoLayout.measuredWidth > 0 && videoLayout.measuredHeight > 0) {
                     mediaPlayer.attachViews(videoLayout, null, true, true)
@@ -67,6 +76,9 @@ class VideoActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Método que se llama al destruir la actividad. Libera los recursos del reproductor de medios y de LibVLC.
+     */
     override fun onDestroy() {
         super.onDestroy()
         mediaPlayer.release()

@@ -5,32 +5,30 @@ import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.view.MenuItem
+import android.webkit.URLUtil
 import android.widget.Button
 import android.widget.EditText
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.Toolbar
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.booleanPreferencesKey
-import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.stringPreferencesKey
-import androidx.datastore.preferences.preferencesDataStore
 import com.emartinez.app_domotica.R
-import com.emartinez.app_domotica.controller.Auth
+import com.emartinez.app_domotica.controller.InitPrefs
 import com.emartinez.app_domotica.databinding.ActivitySettingsBinding
-import com.emartinez.app_domotica.model.SettingsModel
 import com.emartinez.app_domotica.ui.LoginActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
-val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
-
+/**
+ * `SettingsActivity` es una actividad que proporciona la interfaz de usuario para la configuración de la aplicación.
+ * Permite al usuario activar el modo oscuro, actualizar el token de acceso, actualizar la URL y cerrar sesión.
+ *
+ * @property binding El objeto de enlace que da acceso a las vistas en el diseño.
+ * @property accessToken El token de acceso utilizado para la autenticación.
+ * @property firstTime Una bandera booleana para verificar si es la primera vez que se cargan las configuraciones.
+ * @property isLogin Una bandera booleana para verificar si el usuario ha iniciado sesión.
+ */
 class SettingsActivity : AppCompatActivity() {
 
     companion object {
@@ -43,10 +41,12 @@ class SettingsActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivitySettingsBinding
     private lateinit var accessToken: String
-    private lateinit var url: String
     private var firstTime = true
     private var isLogin = false
 
+    /**
+     * Método que se llama al crear la actividad. Inicializa la interfaz de usuario y establece los listeners de los eventos.
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -59,25 +59,25 @@ class SettingsActivity : AppCompatActivity() {
         supportActionBar?.setDisplayShowTitleEnabled(false)
         toolbar.navigationIcon?.setTint(getColor(R.color.title_text))
 
-        val settings = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        isLogin = settings.getBoolean(IS_LOGIN, false)
-
-        CoroutineScope(Dispatchers.IO).launch {
-            getSettings().filter{firstTime}.collect {settingsModel ->
-                if(settingsModel != null){
-                    runOnUiThread {
-                        binding.swDarkMode.isChecked = settingsModel.darkMode
-                        accessToken = settingsModel.token
-                        Auth.token = accessToken
-                        url = settings.getString(KEY_URL, "http://homeassistant.local:8123/") ?: "http://homeassistant.local:8123/"
-                        firstTime = !firstTime
-                    }
-                }
+        if (InitPrefs.url.isBlank() || (!URLUtil.isHttpUrl(InitPrefs.url) && !URLUtil.isHttpsUrl(
+                InitPrefs.url
+            ))
+        ) {
+            InitPrefs.url = "http://homeassistant.local:8123/"
+            CoroutineScope(Dispatchers.IO).launch {
+                savePreferences(KEY_URL, InitPrefs.url)
             }
         }
+
+        val sharedPref = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        isLogin = sharedPref.getBoolean(IS_LOGIN, false)
+
         initUi()
     }
 
+    /**
+     * Método que se llama cuando se selecciona un elemento del menú de opciones.
+     */
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             android.R.id.home -> {
@@ -89,16 +89,18 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Método para inicializar la interfaz de usuario. Establece los listeners de los eventos de los elementos de la interfaz de usuario.
+     */
     private fun initUi() {
         binding.swDarkMode.setOnCheckedChangeListener { _, value ->
-
-            if(value) {
+            if (value) {
                 enableDarkMode()
             } else {
                 disableDarkMode()
             }
             CoroutineScope(Dispatchers.IO).launch {
-                saveOption(KEY_DARK_MODE, value)
+                saveDarkModeOption(value)
             }
         }
         binding.llTtoken.setOnClickListener {
@@ -113,28 +115,15 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
-    private suspend fun saveToken(key: String, value: String) {
-        dataStore.edit { preferences ->
-            preferences[stringPreferencesKey(key)] = value
-        }
-    }
 
-    private suspend fun saveOption(key: String, value: Boolean) {
-        dataStore.edit { preferences ->
-            preferences[booleanPreferencesKey(key)] = value
-
-        }
-    }
-
-    suspend fun clearDataStore() {
-        dataStore.edit { preferences ->
-            preferences.clear()
-        }
-    }
-
+    /**
+     * Método para mostrar un diálogo que permite al usuario introducir un nuevo token de acceso.
+     */
     private fun dialogToken() {
         val dialog = Dialog(this)
         dialog.setContentView(R.layout.dialog_token)
+        Log.d("Token", "Token: $accessToken")
+
 
         val btnGuardarToken: Button = dialog.findViewById(R.id.btnGuardarToken)
         val etTokenUser: EditText = dialog.findViewById(R.id.etTokenUser)
@@ -144,32 +133,35 @@ class SettingsActivity : AppCompatActivity() {
             if (inputToken.isNotEmpty()) {
                 accessToken = inputToken
                 CoroutineScope(Dispatchers.IO).launch {
-                    saveToken(KEY_TOKEN, accessToken)
-                    Auth.token = accessToken // Establece el token en la clase Auth
+                    savePreferences(KEY_TOKEN, accessToken)
+                    InitPrefs.token = accessToken
                 }
-                saveToken(accessToken) // Guarda el token en SharedPreferences
+                Log.d("Token", "Token: $accessToken")
                 dialog.dismiss()
             }
         }
         dialog.show()
     }
 
+    /**
+     * Método para mostrar un diálogo que permite al usuario introducir una nueva URL.
+     */
     private fun dialogUrl() {
         val dialog = Dialog(this)
+        var url: String = InitPrefs.url
         dialog.setContentView(R.layout.dialog_url)
         Log.d("URL", "URL: $url")
         val btnGuardarUrl: Button = dialog.findViewById(R.id.btnGuardarUrl)
         val etNewUrl: EditText = dialog.findViewById(R.id.etNewUrl)
 
         btnGuardarUrl.setOnClickListener {
-            val inputUrl= etNewUrl.text.toString()
+            val inputUrl = etNewUrl.text.toString()
             if (inputUrl.isNotEmpty()) {
                 url = inputUrl
                 CoroutineScope(Dispatchers.IO).launch {
-                    saveToken(KEY_URL, url)
-                    Auth.url = url
+                    savePreferences(KEY_URL, url)
+                    InitPrefs.url = url
                 }
-                saveToken(url)
                 Log.d("URL", "URL: $url")
                 dialog.dismiss()
             }
@@ -177,39 +169,43 @@ class SettingsActivity : AppCompatActivity() {
         dialog.show()
     }
 
-    private fun getSettings(): Flow<SettingsModel?> {
-        return dataStore.data.map{preferences ->
-            SettingsModel(
-                preferences[booleanPreferencesKey(KEY_DARK_MODE)] ?: false,
-                preferences[stringPreferencesKey(KEY_TOKEN)] ?: ""
-            )
-        }
-    }
-
+    /**
+     * Método para habilitar el modo oscuro en la aplicación.
+     */
     private fun enableDarkMode() {
         // Habilitar modo oscuro
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
         delegate.applyDayNight()
     }
 
+    /**
+     * Método para deshabilitar el modo oscuro en la aplicación.
+     */
     private fun disableDarkMode() {
         // Deshabilitar modo oscuro
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
         delegate.applyDayNight()
     }
 
-    private fun saveToken(token: String) {
+    /**
+     * Método para guardar una preferencia en el almacenamiento de preferencias compartidas.
+     */
+    private fun savePreferences(key: String, value: String) {
         val sharedPref = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        with (sharedPref.edit()) {
-            putString(KEY_TOKEN, token)
+        with(sharedPref.edit()) {
+            putString(key, value)
             apply()
         }
     }
 
-//    fun saveLoginState(isLogin: Boolean) {
-//        val settings = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-//        val editor = settings.edit()
-//        editor.putBoolean(IS_LOGIN, isLogin)
-//        editor.apply()
-//    }
+    /**
+     * Método para guardar la opción del modo oscuro en el almacenamiento de preferencias compartidas.
+     */
+    private fun saveDarkModeOption(value: Boolean) {
+        val sharedPref = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        with(sharedPref.edit()) {
+            putBoolean(KEY_DARK_MODE, value)
+            apply()
+        }
+    }
 }

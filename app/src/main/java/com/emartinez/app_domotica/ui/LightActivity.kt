@@ -17,10 +17,20 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+/**
+ * `LightActivity` es una actividad que proporciona la interfaz de usuario para la gestión de luces en la aplicación.
+ *
+ * @property binding El objeto de enlace que da acceso a las vistas en el diseño.
+ * @property lightAdapter El adaptador para la lista de luces.
+ */
 class LightActivity : HomeAssistantActivity() {
 
     private lateinit var binding: ActivityLightBinding
     private lateinit var lightAdapter: LightAdapter
+
+    /**
+     * Método que se llama al crear la actividad. Inicializa la interfaz de usuario y recupera los datos de la API.
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -40,6 +50,9 @@ class LightActivity : HomeAssistantActivity() {
         fetchApiData()
     }
 
+    /**
+     * Método que se llama cuando se selecciona un elemento del menú de opciones.
+     */
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             android.R.id.home -> {
@@ -51,7 +64,10 @@ class LightActivity : HomeAssistantActivity() {
         }
     }
 
-    private fun initUi(){
+    /**
+     * Método para inicializar la interfaz de usuario. Establece el adaptador para la lista de luces.
+     */
+    private fun initUi() {
         lightAdapter = LightAdapter(this)
         binding.rvLightItemList.adapter = lightAdapter
 
@@ -59,6 +75,9 @@ class LightActivity : HomeAssistantActivity() {
         binding.rvLightItemList.layoutManager = LinearLayoutManager(this)
     }
 
+    /**
+     * Método para recuperar los datos de la API. Clasifica la respuesta de la API y actualiza la lista de luces.
+     */
     private fun fetchApiData() {
         CoroutineScope(Dispatchers.IO).launch {
             val response = retrofit.create(ApiService::class.java).getStates().execute()

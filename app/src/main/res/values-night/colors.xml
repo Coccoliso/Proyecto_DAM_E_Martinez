@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="colorStatusBar">#2C3259</color>
+    <color name="colorNavigationBar">#0E0B20</color>
+    <color name="colorBackground">#0E0B20</color>
+
+
 
     <color name="toolbar">#0E0B20</color>
     <color name="background_component_hover">#2C3259</color>

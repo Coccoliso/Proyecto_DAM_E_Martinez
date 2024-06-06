@@ -24,12 +24,23 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.flask.colorpicker.ColorPickerView
 
-
+/**
+ * Clase `LightViewHolder` se encarga de proporcionar la vista para un elemento de la lista de luces
+ * en la interfaz de usuario.
+ *
+ * @property View La vista que representa un elemento de la lista de luces.
+ * @property activity La actividad en la que se utiliza este ViewHolder.
+ */
 class LightViewHolder(view: View, private val activity: HomeAssistantActivity) :
     RecyclerView.ViewHolder(view) {
 
     private val binding = ItemLightBinding.bind(view)
 
+    /**
+     * Enlaza los datos de una luz con la vista.
+     *
+     * @param light Los datos de la luz que se enlazarán con la vista.
+     */
     fun bind(light: ApiItem.Light) {
         Log.d("LightViewHolder", "Enlazando luz: ${light.entityId}")
 
@@ -44,11 +55,16 @@ class LightViewHolder(view: View, private val activity: HomeAssistantActivity) :
 
         binding.swLight.setOnCheckedChangeListener { _, isChecked ->
             CoroutineScope(Dispatchers.Main).launch {
-               changeLightState(light.entityId, isChecked)
+                changeLightState(light.entityId, isChecked)
             }
         }
     }
 
+    /**
+     * Comprueba el estado de una luz y actualiza la vista en consecuencia.
+     *
+     * @param item Los datos de la luz cuyo estado se comprobará.
+     */
     private fun checkLightState(item: ApiItem.Light) {
         CoroutineScope(Dispatchers.IO).launch {
             val myResponse =
@@ -72,6 +88,12 @@ class LightViewHolder(view: View, private val activity: HomeAssistantActivity) :
         }
     }
 
+    /**
+     * Cambia el estado de una luz.
+     *
+     * @param entityId El identificador único de la luz cuyo estado se cambiará.
+     * @param state El nuevo estado de la luz.
+     */
     private suspend fun changeLightState(entityId: String, state: Boolean) {
         return CoroutineScope(Dispatchers.IO).async {
             if (state) {
@@ -90,6 +112,11 @@ class LightViewHolder(view: View, private val activity: HomeAssistantActivity) :
         }.await()
     }
 
+    /**
+     * Muestra un diálogo con opciones para cambiar el brillo y el color de una luz.
+     *
+     * @param light Los datos de la luz para la que se mostrará el diálogo.
+     */
     @SuppressLint("SetTextI18n")
     private fun showDialog(light: ApiItem.Light) {
         val dialog = Dialog(activity)
@@ -117,6 +144,7 @@ class LightViewHolder(view: View, private val activity: HomeAssistantActivity) :
                     }
                 }
             }
+
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
             override fun onStopTrackingTouch(seekBar: SeekBar?) {}
         })
@@ -136,7 +164,10 @@ class LightViewHolder(view: View, private val activity: HomeAssistantActivity) :
                     if (myResponse.isSuccessful) {
                         Log.d("LightViewHolder", "Color cambiado con éxito")
                     } else {
-                        Log.e("HomeAssistant", "Error al cambiar el color: ${myResponse.errorBody()}")
+                        Log.e(
+                            "HomeAssistant",
+                            "Error al cambiar el color: ${myResponse.errorBody()}"
+                        )
                     }
                 }
             }
@@ -144,6 +175,12 @@ class LightViewHolder(view: View, private val activity: HomeAssistantActivity) :
         dialog.show()
     }
 
+    /**
+     * Actualiza los valores del diálogo con el brillo y el color actuales de una luz.
+     *
+     * @param dialog El diálogo que se actualizará.
+     * @param light Los datos de la luz cuyos valores se mostrarán en el diálogo.
+     */
     private fun updateDialogValues(dialog: Dialog, light: ApiItem.Light) {
         CoroutineScope(Dispatchers.IO).launch {
             val myResponse =
