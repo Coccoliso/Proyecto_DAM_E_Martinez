@@ -1,4 +1,4 @@
-package com.emartinez.app_domotica.recyclerview
+package com.emartinez.app_domotica.ui.recyclerview
 
 import android.annotation.SuppressLint
 import android.util.Log
@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.emartinez.app_domotica.HomeAssistantActivity
 import com.emartinez.app_domotica.R
+import com.emartinez.app_domotica.model.ApiItem
 
 class OpclSensorAdapter(private val activity: HomeAssistantActivity) :
     RecyclerView.Adapter<OpclSensorViewHolder>() {

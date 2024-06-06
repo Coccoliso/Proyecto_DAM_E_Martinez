@@ -1,4 +1,4 @@
-package com.emartinez.app_domotica.recyclerview
+package com.emartinez.app_domotica.ui.recyclerview
 
 import android.annotation.SuppressLint
 import android.app.Dialog
@@ -11,11 +11,12 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.emartinez.app_domotica.HomeAssistantActivity
 import com.emartinez.app_domotica.R
-import com.emartinez.app_domotica.api.ApiService
-import com.emartinez.app_domotica.api.ChangeBrightnessBody
-import com.emartinez.app_domotica.api.ChangeColorBody
-import com.emartinez.app_domotica.api.EntityId
+import com.emartinez.app_domotica.model.ApiService
+import com.emartinez.app_domotica.model.ChangeBrightnessBody
+import com.emartinez.app_domotica.model.ChangeColorBody
+import com.emartinez.app_domotica.model.EntityId
 import com.emartinez.app_domotica.databinding.ItemLightBinding
+import com.emartinez.app_domotica.model.ApiItem
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async

@@ -1,4 +1,4 @@
-package com.emartinez.app_domotica.recyclerview
+package com.emartinez.app_domotica.model
 
 sealed class ApiItem {
 

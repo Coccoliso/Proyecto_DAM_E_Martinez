@@ -1,10 +1,9 @@
-package com.emartinez.app_domotica.login
+package com.emartinez.app_domotica.ui
 
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -12,12 +11,10 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.emartinez.app_domotica.HomeAssistantActivity
 import com.emartinez.app_domotica.R
-import com.emartinez.app_domotica.api.Auth
+import com.emartinez.app_domotica.controller.Auth
 import com.emartinez.app_domotica.databinding.ActivityLoginBinding
-import com.emartinez.app_domotica.register.RegisterActivity
-import com.emartinez.app_domotica.settings.SettingsActivity
-import com.emartinez.app_domotica.settings.SettingsActivity.Companion.IS_LOGIN
-import com.emartinez.app_domotica.settings.SettingsActivity.Companion.PREFS_NAME
+import com.emartinez.app_domotica.ui.settings.SettingsActivity
+import com.emartinez.app_domotica.ui.settings.SettingsActivity.Companion.PREFS_NAME
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
@@ -57,7 +54,7 @@ class LoginActivity : AppCompatActivity() {
 
     private fun initUI() {
         binding.btnLogin.setOnClickListener {
-            val email = binding.etEmail.text.toString()
+            val email = binding.etLoginEmail.text.toString()
             val password = binding.etLoginPassword.text.toString()
 
             if(checkEmpty(email, password)){

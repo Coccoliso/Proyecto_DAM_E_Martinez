@@ -5,8 +5,7 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.emartinez.app_domotica.HomeAssistantActivity
-import com.emartinez.app_domotica.login.LoginActivity
-import com.emartinez.app_domotica.settings.SettingsActivity.Companion.PREFS_NAME
+import com.emartinez.app_domotica.ui.settings.SettingsActivity.Companion.PREFS_NAME
 
 class SplashActivity : AppCompatActivity() {
 

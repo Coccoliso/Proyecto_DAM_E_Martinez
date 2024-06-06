@@ -1,9 +1,7 @@
-package com.emartinez.app_domotica.settings
+package com.emartinez.app_domotica.ui.settings
 
 import android.app.Dialog
-import android.app.UiModeManager
 import android.content.Context
-import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.MenuItem
@@ -20,14 +18,14 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.emartinez.app_domotica.R
-import com.emartinez.app_domotica.api.Auth
+import com.emartinez.app_domotica.controller.Auth
 import com.emartinez.app_domotica.databinding.ActivitySettingsBinding
-import com.emartinez.app_domotica.login.LoginActivity
+import com.emartinez.app_domotica.model.SettingsModel
+import com.emartinez.app_domotica.ui.LoginActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
