@@ -117,7 +117,7 @@
                 android:layout_height="wrap_content"
                 android:layout_margin="16dp"
                 android:contentDescription="@string/url_home_assistant"
-                android:src="@drawable/ic_token_access" />
+                android:src="@drawable/ic_url" />
 
             <androidx.appcompat.widget.LinearLayoutCompat
                 android:layout_width="0dp"
