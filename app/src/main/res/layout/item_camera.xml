@@ -43,11 +43,6 @@
             android:layout_height="match_parent"
             android:layout_weight="1" />
 
-        <androidx.appcompat.widget.SwitchCompat
-            android:id="@+id/swCamera"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            app:thumbTint="@color/background_button" />
 
     </androidx.appcompat.widget.LinearLayoutCompat>
 </androidx.appcompat.widget.LinearLayoutCompat>

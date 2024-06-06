@@ -11,25 +11,36 @@ import com.emartinez.app_domotica.R
 import com.emartinez.app_domotica.model.ApiService
 import com.emartinez.app_domotica.databinding.ActivityCameraBinding
 import com.emartinez.app_domotica.model.ApiItem
+import com.emartinez.app_domotica.ui.recyclerview.CameraAdapter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+/**
+ * `CameraActivity` es una actividad que proporciona la interfaz de usuario para la gestión de cámaras en la aplicación.
+ *
+ * @property binding El objeto de enlace que da acceso a las vistas en el diseño.
+ * @property cameraAdapter El adaptador para la lista de cámaras.
+ */
 class CameraActivity : HomeAssistantActivity() {
 
     private lateinit var binding: ActivityCameraBinding
     private lateinit var cameraAdapter: CameraAdapter
+
+    /**
+     * Método que se llama al crear la actividad. Inicializa la interfaz de usuario y recupera los datos de la API.
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContentView(R.layout.activity_light)
+        setContentView(R.layout.activity_camera)
 
         binding = ActivityCameraBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
 
-        val toolbar = findViewById<Toolbar>(R.id.light_toolbar)
+        val toolbar = findViewById<Toolbar>(R.id.camera_toolbar)
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.setDisplayShowTitleEnabled(false)
@@ -39,6 +50,9 @@ class CameraActivity : HomeAssistantActivity() {
         fetchApiData()
     }
 
+    /**
+     * Método que se llama cuando se selecciona un elemento del menú de opciones.
+     */
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             android.R.id.home -> {
@@ -50,7 +64,10 @@ class CameraActivity : HomeAssistantActivity() {
         }
     }
 
-    private fun initUi(){
+    /**
+     * Método para inicializar la interfaz de usuario. Establece el adaptador para la lista de cámaras.
+     */
+    private fun initUi() {
         cameraAdapter = CameraAdapter(this)
         binding.rvCameraItemList.adapter = cameraAdapter
 
@@ -58,6 +75,9 @@ class CameraActivity : HomeAssistantActivity() {
         binding.rvCameraItemList.layoutManager = LinearLayoutManager(this)
     }
 
+    /**
+     * Método para recuperar los datos de la API. Clasifica la respuesta de la API y actualiza la lista de cámaras.
+     */
     private fun fetchApiData() {
         CoroutineScope(Dispatchers.IO).launch {
             val response = retrofit.create(ApiService::class.java).getStates().execute()

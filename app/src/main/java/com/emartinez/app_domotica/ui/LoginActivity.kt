@@ -11,7 +11,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.emartinez.app_domotica.HomeAssistantActivity
 import com.emartinez.app_domotica.R
-import com.emartinez.app_domotica.controller.Auth
+import com.emartinez.app_domotica.controller.InitPrefs
 import com.emartinez.app_domotica.databinding.ActivityLoginBinding
 import com.emartinez.app_domotica.ui.settings.SettingsActivity
 import com.emartinez.app_domotica.ui.settings.SettingsActivity.Companion.PREFS_NAME
@@ -22,11 +22,23 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
+/**
+ * `LoginActivity` es una actividad que proporciona la interfaz de usuario para el inicio de sesión en la aplicación.
+ *
+ * @property binding El objeto de enlace que da acceso a las vistas en el diseño.
+ * @property auth La instancia de FirebaseAuth utilizada para la autenticación.
+ */
 class LoginActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityLoginBinding
     private lateinit var auth: FirebaseAuth
 
+    /**
+     * `LoginActivity` es una actividad que proporciona la interfaz de usuario para el inicio de sesión en la aplicación.
+     *
+     * @property binding El objeto de enlace que da acceso a las vistas en el diseño.
+     * @property auth La instancia de FirebaseAuth utilizada para la autenticación.
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -43,21 +55,30 @@ class LoginActivity : AppCompatActivity() {
             insets
         }
 
-       initUI()
-
+        initUI()
 
     }
 
+    /**
+     * Método para verificar si los campos de correo electrónico y contraseña están vacíos.
+     *
+     * @param email El correo electrónico ingresado por el usuario.
+     * @param password La contraseña ingresada por el usuario.
+     * @return Verdadero si ambos campos están llenos, falso en caso contrario.
+     */
     private fun checkEmpty(email: String, password: String): Boolean {
         return email.isNotEmpty() && password.isNotEmpty()
     }
 
+    /**
+     * Método para inicializar la interfaz de usuario. Establece los listeners de los eventos de los elementos de la interfaz de usuario.
+     */
     private fun initUI() {
         binding.btnLogin.setOnClickListener {
             val email = binding.etLoginEmail.text.toString()
             val password = binding.etLoginPassword.text.toString()
 
-            if(checkEmpty(email, password)){
+            if (checkEmpty(email, password)) {
                 login(email, password)
             }
         }
@@ -69,9 +90,15 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Método para iniciar sesión en la aplicación con un correo electrónico y una contraseña.
+     *
+     * @param email El correo electrónico ingresado por el usuario.
+     * @param password La contraseña ingresada por el usuario.
+     */
     private fun login(email: String, password: String) {
-        auth.signInWithEmailAndPassword(email, password).addOnCompleteListener(this){ task ->
-            if(task.isSuccessful){
+        auth.signInWithEmailAndPassword(email, password).addOnCompleteListener(this) { task ->
+            if (task.isSuccessful) {
 
                 val settings = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
                 val editor = settings.edit()
@@ -82,22 +109,27 @@ class LoginActivity : AppCompatActivity() {
                 val intent = Intent(this, HomeAssistantActivity::class.java)
                 startActivity(intent)
                 finish()
-            }else{
+            } else {
                 Toast.makeText(applicationContext, "Login Failed", Toast.LENGTH_LONG).show()
             }
         }
     }
 
     companion object {
+        /**
+         * Método para cerrar la sesión del usuario y volver a la pantalla de inicio de sesión.
+         *
+         * @param context El contexto desde el cual se llama a este método.
+         */
         fun logout(context: Context) {
-            val settings = context.getSharedPreferences(SettingsActivity.PREFS_NAME, Context.MODE_PRIVATE)
+            val settings =
+                context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             val editor = settings.edit()
             editor.putBoolean(SettingsActivity.IS_LOGIN, false)
             editor.apply()
 
             CoroutineScope(Dispatchers.IO).launch {
-                (context as SettingsActivity).clearDataStore()
-                Auth.token = "" // Limpia el token en la clase Auth
+                InitPrefs.token = ""
             }
 
             val intent = Intent(context, LoginActivity::class.java)

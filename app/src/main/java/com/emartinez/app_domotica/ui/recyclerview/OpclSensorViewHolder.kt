@@ -18,12 +18,24 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
+/**
+ * Clase `OpclSensorViewHolder` que se encarga de proporcionar la vista para un elemento de la
+ * lista de sensores de apertura en la interfaz de usuario.
+ *
+ * @property View La vista que representa un elemento de la lista de sensores de apertura.
+ * @property activity La actividad en la que se utiliza este ViewHolder.
+ */
 class OpclSensorViewHolder(view: View, private val activity: HomeAssistantActivity) :
     RecyclerView.ViewHolder(view) {
 
     private val binding = ItemOpeningSensorBinding.bind(view)
     private var pollingJob: Job? = null
 
+    /**
+     * Enlaza los datos de un sensor de apertura con la vista.
+     *
+     * @param opclSensor Los datos del sensor de apertura que se enlazarán con la vista.
+     */
     fun bind(opclSensor: ApiItem.OpeningSensor) {
 
         startPollingJob(opclSensor)
@@ -40,6 +52,11 @@ class OpclSensorViewHolder(view: View, private val activity: HomeAssistantActivi
 
     }
 
+    /**
+     * Inicia un trabajo de sondeo para comprobar el estado del sensor de apertura.
+     *
+     * @param opclSensor Los datos del sensor de apertura que se sondeará.
+     */
     private fun startPollingJob(opclSensor: ApiItem.OpeningSensor) {
         pollingJob?.cancel()  // Cancela cualquier pollingJob existente antes de iniciar uno nuevo
         pollingJob = CoroutineScope(Dispatchers.IO).launch {
@@ -50,6 +67,11 @@ class OpclSensorViewHolder(view: View, private val activity: HomeAssistantActivi
         }
     }
 
+    /**
+     * Comprueba el estado del sensor de apertura y actualiza la vista en consecuencia.
+     *
+     * @param item Los datos del sensor de apertura cuyo estado se comprobará.
+     */
     private fun checkOpeningSensorState(item: ApiItem.OpeningSensor) {
         CoroutineScope(Dispatchers.IO).launch {
             val myResponse =
@@ -75,6 +97,11 @@ class OpclSensorViewHolder(view: View, private val activity: HomeAssistantActivi
         }
     }
 
+    /**
+     * Muestra un diálogo con información sobre el sensor de apertura.
+     *
+     * @param opclSensor Los datos del sensor de apertura para el que se mostrará el diálogo.
+     */
     @SuppressLint("SetTextI18n")
     private fun showDialog(opclSensor: ApiItem.OpeningSensor) {
         val dialog = Dialog(activity)
@@ -111,6 +138,13 @@ class OpclSensorViewHolder(view: View, private val activity: HomeAssistantActivi
         dialog.show()
     }
 
+    /**
+     * Comprueba el estado de un elemento (como la batería o la temperatura del sensor de apertura)
+     * y devuelve el estado a través de una función de devolución de llamada.
+     *
+     * @param entityId El identificador único del elemento cuyo estado se comprobará.
+     * @param callback La función de devolución de llamada que se invocará con el estado del elemento.
+     */
     private fun checkItemState(entityId: String, callback: (String?) -> Unit) {
         activity.retrofit.create(ApiService::class.java).getItemState(entityId)
             .enqueue(object :
