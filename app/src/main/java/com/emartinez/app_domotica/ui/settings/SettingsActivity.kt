@@ -1,9 +1,7 @@
-package com.emartinez.app_domotica.settings
+package com.emartinez.app_domotica.ui.settings
 
 import android.app.Dialog
-import android.app.UiModeManager
 import android.content.Context
-import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.MenuItem
@@ -20,14 +18,14 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.emartinez.app_domotica.R
-import com.emartinez.app_domotica.api.Auth
+import com.emartinez.app_domotica.controller.Auth
 import com.emartinez.app_domotica.databinding.ActivitySettingsBinding
-import com.emartinez.app_domotica.login.LoginActivity
+import com.emartinez.app_domotica.model.SettingsModel
+import com.emartinez.app_domotica.ui.LoginActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
@@ -38,12 +36,14 @@ class SettingsActivity : AppCompatActivity() {
     companion object {
         const val KEY_DARK_MODE = "key_dark_mode"
         const val KEY_TOKEN = "key_token"
+        const val KEY_URL = "key_url"
         const val PREFS_NAME = "com.emartinez.app_domotica"
         const val IS_LOGIN = "is_login"
     }
 
     private lateinit var binding: ActivitySettingsBinding
     private lateinit var accessToken: String
+    private lateinit var url: String
     private var firstTime = true
     private var isLogin = false
 
@@ -69,6 +69,7 @@ class SettingsActivity : AppCompatActivity() {
                         binding.swDarkMode.isChecked = settingsModel.darkMode
                         accessToken = settingsModel.token
                         Auth.token = accessToken
+                        url = settings.getString(KEY_URL, "http://homeassistant.local:8123/") ?: "http://homeassistant.local:8123/"
                         firstTime = !firstTime
                     }
                 }
@@ -101,7 +102,10 @@ class SettingsActivity : AppCompatActivity() {
             }
         }
         binding.llTtoken.setOnClickListener {
-            dialog()
+            dialogToken()
+        }
+        binding.llUrl.setOnClickListener {
+            dialogUrl()
         }
         binding.llLogout.setOnClickListener {
             Log.d("Logout", "Logout button clicked") // Agrega este registro de depuración
@@ -128,7 +132,7 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
-    private fun dialog() {
+    private fun dialogToken() {
         val dialog = Dialog(this)
         dialog.setContentView(R.layout.dialog_token)
 
@@ -144,6 +148,29 @@ class SettingsActivity : AppCompatActivity() {
                     Auth.token = accessToken // Establece el token en la clase Auth
                 }
                 saveToken(accessToken) // Guarda el token en SharedPreferences
+                dialog.dismiss()
+            }
+        }
+        dialog.show()
+    }
+
+    private fun dialogUrl() {
+        val dialog = Dialog(this)
+        dialog.setContentView(R.layout.dialog_url)
+        Log.d("URL", "URL: $url")
+        val btnGuardarUrl: Button = dialog.findViewById(R.id.btnGuardarUrl)
+        val etNewUrl: EditText = dialog.findViewById(R.id.etNewUrl)
+
+        btnGuardarUrl.setOnClickListener {
+            val inputUrl= etNewUrl.text.toString()
+            if (inputUrl.isNotEmpty()) {
+                url = inputUrl
+                CoroutineScope(Dispatchers.IO).launch {
+                    saveToken(KEY_URL, url)
+                    Auth.url = url
+                }
+                saveToken(url)
+                Log.d("URL", "URL: $url")
                 dialog.dismiss()
             }
         }

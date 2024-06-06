@@ -1,4 +1,4 @@
-package com.emartinez.app_domotica.recyclerview
+package com.emartinez.app_domotica.ui.recyclerview
 
 import android.annotation.SuppressLint
 import android.app.Dialog
@@ -9,9 +9,10 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.emartinez.app_domotica.HomeAssistantActivity
 import com.emartinez.app_domotica.R
-import com.emartinez.app_domotica.api.ApiService
-import com.emartinez.app_domotica.api.ItemStateResponse
+import com.emartinez.app_domotica.model.ApiService
+import com.emartinez.app_domotica.model.ItemStateResponse
 import com.emartinez.app_domotica.databinding.ItemOpeningSensorBinding
+import com.emartinez.app_domotica.model.ApiItem
 import kotlinx.coroutines.*
 import retrofit2.Call
 import retrofit2.Callback

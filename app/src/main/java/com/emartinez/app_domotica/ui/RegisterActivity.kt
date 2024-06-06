@@ -1,4 +1,4 @@
-package com.emartinez.app_domotica.register
+package com.emartinez.app_domotica.ui
 
 import android.content.Intent
 import android.os.Bundle
@@ -9,9 +9,8 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.emartinez.app_domotica.HomeAssistantActivity
 import com.emartinez.app_domotica.R
-import com.emartinez.app_domotica.api.Auth
+import com.emartinez.app_domotica.controller.Auth
 import com.emartinez.app_domotica.databinding.ActivityRegisterBinding
-import com.emartinez.app_domotica.login.LoginActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
